@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ORL Inc – Prospectus</title>
+  <link rel="stylesheet" href="css/viewer.css">
+</head>
+<body>
+
+  <div id="loading">
+    <div id="loading-text">Loading prospectus…</div>
+    <div id="progress-bar"><div id="progress-fill"></div></div>
+  </div>
+
+  <div id="viewer-wrap" hidden>
+    <div id="flipbook"></div>
+    <div id="controls">
+      <button id="btn-prev">&#8249; Prev</button>
+      <span id="page-indicator">Page 1</span>
+      <button id="btn-next">Next &#8250;</button>
+    </div>
+  </div>
+
+  <!-- PDF.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <!-- StPageFlip -->
+  <script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.js"></script>
+  <!-- Viewer init -->
+  <script src="js/init.js"></script>
+
+</body>
+</html>
