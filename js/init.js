@@ -70,9 +70,17 @@
     loadingEl.hidden  = true;
     viewerWrap.hidden = false;
 
+    // Jump to ?page=N on load (1-based, clamped to valid range)
+    const startPage = Math.min(
+      Math.max(parseInt(new URLSearchParams(location.search).get('page')) || 1, 1),
+      numPages
+    );
+    if (startPage > 1) book.turnToPage(startPage - 1);
+
     function updateIndicator() {
       const cur = book.getCurrentPageIndex() + 1;
       pageIndicator.textContent = `Page ${cur} / ${numPages}`;
+      history.replaceState(null, '', `?page=${cur}`);
     }
 
     book.on('flip', updateIndicator);
