@@ -1,191 +1,126 @@
-text
-# CLAUDE.md – Prospectus Flipbook at prospectus.orl-inc.com
+# CLAUDE.md – ORL Equipment Prospectus Flipbook
 
+## What This Is
 
+A static flipbook-style PDF viewer served at **https://prospectus.orl-inc.com/** via Cloudflare Pages.
+No build step, no backend — pure static HTML/JS/CSS.
 
-\## Goal
+---
 
+## URLs & Services
 
+| Thing | Value |
+|---|---|
+| Live site | https://prospectus.orl-inc.com/ |
+| GitHub repo | https://github.com/ORL-edmorra/orl-inc.com-website |
+| CF Pages project | `orl-inc-com-website` (no dots allowed in CF project names) |
+| GitHub account | `ORL-edmorra` (dayjob, active) |
 
-Create a static, flipbook‑style viewer for a PDF named `Prospectus(74).pdf`, served at `https://prospectus.orl-inc.com/` using Cloudflare Pages.
+---
 
+## File Structure
 
+```
+cloudflare/
+  index.html            # Viewer entry point + Open Graph meta tags
+  Prospectus-74.pdf     # The PDF catalog (renamed from Prospectus(74).pdf)
+  prospectus-card.png   # 400×400 social card for LinkedIn / email
+  css/
+    viewer.css          # Dark theme layout and navigation controls
+  js/
+    init.js             # PDF.js + StPageFlip wiring; ?page=N deep linking
+  .gitignore            # Excludes desktop.ini, OpenSans-Bold.ttf, etc.
+  CLAUDE.md             # This file
+```
 
-Project root on disk:
+---
 
+## Libraries (CDN — no local JS files needed)
 
+- **PDF.js 3.11.174** — renders PDF pages to `<canvas>`
+  `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js`
+- **StPageFlip 2.0.7** — flip animation, used as `new St.PageFlip(...)`
+  `https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.js`
 
-```text
+---
 
-G:\\Shared drives\\WEB\\orl-inc.com\\cloudflare\\
+## Key Features
 
-This directory will be the root of the Pages project and Git repo.
+- Page-flip animation (click / drag)
+- `?page=N` URL parameter — opens directly to page N (1-based, clamped)
+- Address bar syncs as you flip — current page is always shareable
+- Open Graph + Twitter Card meta tags point to `prospectus-card.png`
+- Progress bar while PDF renders on first load
 
+---
 
+## Updating the Prospectus PDF
 
-Plan
+Replace `Prospectus-74.pdf` with the new version (same filename), then:
 
-Build a pure static HTML/JS/CSS flipbook viewer that loads Prospectus(74).pdf in the browser (no backend).
+```bash
+git add Prospectus-74.pdf
+git commit -m "Update prospectus"
+git push
+```
 
+Cloudflare Pages auto-deploys in ~1 minute. No other changes needed.
 
+> **Note:** Git stores each binary version in full (~10 MB per update).
+> Fine for occasional updates; consider Git LFS if updates become frequent.
 
-Keep everything in this one directory so the Pages project can serve it directly.
+---
 
+## Social Card (`prospectus-card.png`)
 
+400×400 px, cornflower blue gradient (`#80aff5` → `#3d6ec7`), Open Sans Bold.
+`OpenSans-Bold.ttf` is excluded from git (build tool only).
 
-Point the subdomain prospectus.orl-inc.com at this Pages project so visiting that URL shows the flipbook.
+To regenerate:
 
+```bash
+# Download font if not present
+curl -L "https://fonts.gstatic.com/s/opensans/v44/memSYaGs126MiZpBA-UvWbX2vVnXBbObj2OVZyOOSr4dVJWUgsg-1y4n.ttf" \
+  -o OpenSans-Bold.ttf
 
+magick \
+  -size 400x400 gradient:'#80aff5-#3d6ec7' \
+  -font OpenSans-Bold.ttf \
+  -pointsize 36 -fill white -gravity Center \
+  -annotate +0-26 "ORL Equipment" \
+  -annotate +0+26 "Prospectus" \
+  -pointsize 20 -fill "#FFFFFFBB" -gravity South \
+  -annotate +0+22 "prospectus.orl-inc.com" \
+  prospectus-card.png
 
-Local Directory Layout
+git add prospectus-card.png
+git commit -m "Regenerate social card"
+git push
+```
 
-Target structure:
+---
 
+## Git / GitHub Notes
 
+- Remote uses **HTTPS** (not SSH) to avoid conflict with personal `DrFunn1` SSH key
+- `gh auth setup-git` was run to wire the `ORL-edmorra` credential helper
+- Two accounts on this machine: `ORL-edmorra` (active/dayjob), `DrFunn1` (personal)
 
-text
+---
 
-G:\\Shared drives\\WEB\\orl-inc.com\\cloudflare\\
+## Cloudflare Pages Notes
 
-&nbsp; index.html          # flipbook viewer entry point
+- Custom domain added via **dashboard**: Workers & Pages → project → Custom Domains
+- CF auto-created the CNAME since `orl-inc.com` is on the same CF account
+- Auto-deploy on push is active (Git integration connected in dashboard)
+- **Do not manually add a CNAME record before adding the domain in the CF dashboard** —
+  doing so causes a 522 error; CF must own the process end-to-end
 
-&nbsp; Prospectus(74).pdf  # the PDF catalog/prospectus
+---
 
-&nbsp; js/
+## Deep Link Examples
 
-&nbsp;   pdf.js            # PDF renderer (or loaded from CDN)
-
-&nbsp;   flipbook.js       # page-flip library or wrapper
-
-&nbsp;   init.js           # wiring between PDF.js and flipbook UI
-
-&nbsp; css/
-
-&nbsp;   viewer.css        # layout and styles
-
-&nbsp; CLAUDE.md           # this file
-
-Notes:
-
-
-
-index.html is the main viewer page so that / (and thus https://prospectus.orl-inc.com/) loads the flipbook.
-
-
-
-init.js will reference Prospectus(74).pdf; if parentheses cause issues, rename to something like Prospectus-74.pdf and update the code.
-
-
-
-Flipbook Implementation Strategy
-
-Components:
-
-
-
-PDF renderer
-
-Use PDF.js (or similar) to render PDF pages into <canvas> or images in the browser.
-
-
-
-Page‑flip UI
-
-Use a flipbook library or demo that accepts rendered pages, for example a “pdf-html5-page-flip” style approach:
-
-
-
-index.html loads the JS and CSS.
-
-
-
-init.js loads the PDF and feeds each page to the flipbook component.
-
-
-
-Optionally support a ?file= query parameter so the viewer can be reused for other PDFs later.
-
-
-
-Initial goal: a single viewer wired to Prospectus(74).pdf, with:
-
-
-
-Page‑flip animation (click/drag).
-
-
-
-Full‑width layout on desktop, acceptable on tablet.
-
-
-
-Basic next/previous navigation and page indicator.
-
-
-
-Cloudflare Pages and DNS
-
-Pages project
-
-
-
-Put this directory under Git and push to a repo (for example orl-inc-prospectus).
-
-
-
-Create a Cloudflare Pages project pointed at that repo.
-
-
-
-Use this directory as the project root so index.html is served at /.
-
-
-
-Custom domain
-
-
-
-In the Pages project, add the custom domain prospectus.orl-inc.com.
-
-
-
-Let Cloudflare create or instruct you to create the appropriate DNS record (typically a CNAME pointing prospectus to the Pages hostname).
-
-
-
-Result:
-
-
-
-Visiting https://prospectus.orl-inc.com/ loads index.html (flipbook viewer).
-
-
-
-The viewer loads Prospectus(74).pdf from the same origin as a static asset.
-
-
-
-No Worker is required for the initial implementation; this can be entirely static.
-
-
-
-How I Want Help From the Assistant Later
-
-From this directory, I’ll ask the assistant to:
-
-
-
-Scaffold index.html, viewer.css, and init.js wired to Prospectus(74).pdf.
-
-
-
-Suggest safe handling or renaming of the PDF file if the parentheses cause problems.
-
-
-
-Provide concise Git and Cloudflare Pages setup snippets as needed.
-
-
-
-Help refine layout, navigation, and responsiveness once the base flipbook works.
-
+```
+https://prospectus.orl-inc.com/          → page 1
+https://prospectus.orl-inc.com/?page=12  → page 12
+```
